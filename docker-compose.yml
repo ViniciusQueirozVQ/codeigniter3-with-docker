@@ -1,0 +1,68 @@
+version: '2'
+services:
+
+    db:
+        container_name: codeigniter3-mysql
+        build:
+            context: .
+            dockerfile: docker/mysql/Dockerfile
+        environment: 
+            MYSQL_DATABASE: ${MYSQL_DATABASE}
+            MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+        command: --default-authentication-plugin=mysql_native_password
+        restart: unless-stopped
+        volumes:
+            - ./db_data:/usr/data
+        ports:
+            - 3306:3306
+    web:
+            container_name: codeigniter3-apache
+            build:
+                context: .
+                dockerfile: docker/apache/Dockerfile
+                args:
+                    uid: ${UID}
+            environment:
+                - APACHE_RUN_USER=#${UID}
+                - APACHE_RUN_GROUP=#${UID}
+            restart: unless-stopped
+            volumes: 
+                - ./:/var/www/html/public
+                - ./apache_log:/var/log/apache2
+            ports:
+                - 80:80
+            depends_on: 
+                - db
+            links:
+                - db
+
+
+
+#version: '2'
+#
+#services:
+#
+#  app:
+#    container_name: codeigniter-app
+#    image: docker.io/bitnami/codeigniter:3
+#    ports:
+#      - '8000:8000'
+#    environment:
+#      # ALLOW_EMPTY_PASSWORD is recommended only for development.
+#      - ALLOW_EMPTY_PASSWORD=yes
+#      - CODEIGNITER_DATABASE_HOST=mariadb
+#      - CODEIGNITER_DATABASE_PORT_NUMBER=3306
+#      - CODEIGNITER_DATABASE_USER=bn_myapp
+#      - CODEIGNITER_DATABASE_NAME=bitnami_myapp
+#    volumes:
+#      - './:/app'
+#    depends_on:
+#      - mariadb
+#  
+#  mariadb:
+#    image: docker.io/bitnami/mariadb:10.6
+#    environment:
+#      # ALLOW_EMPTY_PASSWORD is recommended only for development.
+#      - ALLOW_EMPTY_PASSWORD=yes
+#      - MARIADB_USER=bn_myapp
+#      - MARIADB_DATABASE=bitnami_myapp
